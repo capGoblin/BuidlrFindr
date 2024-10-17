@@ -25,8 +25,8 @@ const sepolia = {
 
 // 3. Create a metadata object
 const metadata = {
-  name: "BuidlAlliance",
-  description: "BuidlAlliance",
+  name: "BuidlrFindr",
+  description: "BuidlrFindr",
   url: "", // origin must match your domain & subdomain
   icons: ["https://avatars.githubusercontent.com/u/37784886"],
 };
