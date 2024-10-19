@@ -11,6 +11,7 @@ contract HackReview {
         string reviewText;       // Review content
         uint8 starRating;        // Star rating out of 5
         string[] technologies;   // List of technologies used
+        string projectUrl;       // URL of the project (optional)
     }
 
     // Mapping to store reviews of a user (wallet address) => (array of reviews)
@@ -25,7 +26,8 @@ contract HackReview {
         address indexed reviewee,
         string hackathonName,
         uint8 starRating,
-        string[] technologies
+        string[] technologies,
+        string projectUrl
     );
 
     // Function to submit a review
@@ -34,7 +36,8 @@ contract HackReview {
         string memory _hackathonName,
         string memory _reviewText,
         uint8 _starRating,
-        string[] memory _technologies
+        string[] memory _technologies,
+        string memory _projectUrl
     ) public {
         require(_reviewee != msg.sender, "You cannot review yourself.");
         require(_starRating >= 1 && _starRating <= 5, "Rating must be between 1 and 5.");
@@ -46,7 +49,8 @@ contract HackReview {
             hackathonName: _hackathonName,
             reviewText: _reviewText,
             starRating: _starRating,
-            technologies: _technologies
+            technologies: _technologies,
+            projectUrl: _projectUrl
         });
 
         // Add the review to the reviewee's list of reviews
@@ -56,7 +60,7 @@ contract HackReview {
         allReviews.push(newReview);
 
         // Emit the event for the new review
-        emit ReviewSubmitted(msg.sender, _reviewee, _hackathonName, _starRating, _technologies);
+        emit ReviewSubmitted(msg.sender, _reviewee, _hackathonName, _starRating, _technologies, _projectUrl);
     }
 
     // Function to get the reviews of a specific user

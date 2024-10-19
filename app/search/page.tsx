@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Star, Filter, X } from "lucide-react";
+import { Search, Star, Filter, X, Link } from "lucide-react"; // Added Link icon
 import Navbar from "@/components/Navbar";
 import {
   Card,
@@ -32,7 +32,7 @@ import { useSearchParams } from "next/navigation";
 interface Review {
   id: number;
   hackathon: string;
-  project: string;
+  projectUrl: string; // Changed from project to projectUrl
   rating: number;
   review: string;
   skills: string[];
@@ -53,6 +53,7 @@ interface ContractReview {
   reviewText: string;
   starRating: number;
   technologies: string[];
+  projectUrl: string; // Added projectUrl
 }
 
 const ReviewFocusedSearchResults: React.FC = () => {
@@ -84,7 +85,7 @@ const ReviewFocusedSearchResults: React.FC = () => {
       const provider = new ethers.providers.Web3Provider(walletProvider, "any");
       const signer = await provider.getSigner();
       const contract = new Contract(
-        "0xEcAb28dFa5350b9BBC79256C87BD76928590674E",
+        "0xbe2e297a2F5Ef3273773e1d9b47C53DFe44F1b34",
         abi,
         signer
       );
@@ -111,17 +112,17 @@ const ReviewFocusedSearchResults: React.FC = () => {
       const formattedReviews: Review[] = uniqueReviews.map((review, index) => ({
         id: index + 1,
         hackathon: review!.hackathonName,
-        project: "N/A", // This information is not available in the contract
+        projectUrl: review!.projectUrl, // Use projectUrl instead of project
         rating: review!.starRating,
         review: review!.reviewText,
         skills: review!.technologies,
         author: {
           name: review!.reviewer,
-          avatar: "/api/placeholder/150/150", // Use a placeholder or fetch from elsewhere
+          avatar: "/api/placeholder/150/150",
         },
         reviewee: {
           name: review!.reviewee,
-          avatar: "/api/placeholder/150/150", // Use a placeholder or fetch from elsewhere
+          avatar: "/api/placeholder/150/150",
         },
       }));
 
@@ -242,13 +243,26 @@ const ReviewFocusedSearchResults: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-gray-800">
-                        {result.hackathon}: {result.project}
+                        {result.hackathon}
                       </span>
                       <div className="flex">{renderStars(result.rating)}</div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-700 mb-4">{result.review}</p>
+                    {result.projectUrl && (
+                      <p className="text-sm text-gray-600 mb-4 flex items-center">
+                        <Link className="mr-2 h-4 w-4" />
+                        <a
+                          href={result.projectUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:text-blue-600 underline"
+                        >
+                          Project URL: {result.projectUrl}
+                        </a>
+                      </p>
+                    )}
                     <div className="flex flex-wrap gap-2 mb-4">
                       {result.skills.map((skill, index) => (
                         <Badge

@@ -77,6 +77,7 @@ interface NewReview {
   review: string;
   rating: number;
   technologies: string[];
+  projectUrl: string; // Add this line
 }
 
 interface PassportData {
@@ -123,6 +124,7 @@ interface Review {
   comment: string;
   technologies: string[];
   date: string;
+  projectUrl: string; // Add this line
 }
 
 const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
@@ -137,6 +139,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
         "Alice was an incredible teammate. Her Solidity skills are top-notch, and she's great at explaining complex concepts.",
       technologies: ["Solidity", "Ethereum", "React", "Web3.js"],
       date: "2024-03-15",
+      projectUrl: "https://example.com/project1",
     },
     {
       id: 2,
@@ -147,6 +150,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
         "Very knowledgeable about blockchain tech. Could improve on time management, but overall a great collaborator.",
       technologies: ["Polygon", "JavaScript", "Node.js", "IPFS"],
       date: "2024-02-20",
+      projectUrl: "https://example.com/project2",
     },
     {
       id: 3,
@@ -157,6 +161,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
         "Very knowledgeable about blockchain tech. Could improve on time management, but overall a great collaborator.",
       technologies: ["Polygon", "JavaScript", "Node.js", "IPFS"],
       date: "2024-02-20",
+      projectUrl: "https://example.com/project3",
     },
   ];
 
@@ -173,6 +178,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
     review: "",
     rating: 0,
     technologies: [],
+    projectUrl: "",
   });
   const [reviews, setReviews] = useState<Review[]>([...dummyReviews]);
 
@@ -247,7 +253,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
       const signer = await provider.getSigner();
 
       const contract = new Contract(
-        "0xEcAb28dFa5350b9BBC79256C87BD76928590674E",
+        "0xbe2e297a2F5Ef3273773e1d9b47C53DFe44F1b34",
         abi,
         signer
       );
@@ -264,6 +270,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
         comment: review.reviewText,
         technologies: review.technologies,
         date: new Date().toISOString(),
+        projectUrl: review.projectUrl, // Add this line
       }));
 
       // Update the reviews state, appending the new reviews to the existing ones
@@ -280,7 +287,8 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
     hackName: string,
     review: string,
     rating: number,
-    technologies: string[]
+    technologies: string[],
+    projectUrl: string // Add this parameter
   ) {
     if (!isConnected) throw Error("User disconnected");
 
@@ -290,7 +298,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
     const signer = await provider.getSigner();
 
     const contract = new Contract(
-      "0xEcAb28dFa5350b9BBC79256C87BD76928590674E",
+      "0xbe2e297a2F5Ef3273773e1d9b47C53DFe44F1b34",
       abi,
       signer
     );
@@ -300,7 +308,8 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
       hackName,
       review,
       rating,
-      technologies
+      technologies,
+      projectUrl // Add this argument
     );
     console.log("Review submitted", res);
   }
@@ -312,7 +321,8 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
         newReview.hackName,
         newReview.review,
         newReview.rating,
-        newReview.technologies
+        newReview.technologies,
+        newReview.projectUrl // Add this argument
       );
       toast("Review submitted successfully!", {
         description: "Your review has been added to the blockchain.",
@@ -501,6 +511,20 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
                             required
                           />
                         </div>
+                        <div>
+                          <Label htmlFor="projectUrl">Project URL</Label>
+                          <Input
+                            id="projectUrl"
+                            value={newReview.projectUrl}
+                            onChange={(e) =>
+                              setNewReview({
+                                ...newReview,
+                                projectUrl: e.target.value,
+                              })
+                            }
+                            required
+                          />
+                        </div>
                         <Button type="submit">Submit Review</Button>
                       </form>
                     </DialogContent>
@@ -555,11 +579,11 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
                 </div>
               </CardHeader>
               <CardContent className="px-6 pb-6">
-                <ScrollArea className="h-[68vh] pr-4">
-                  {filteredReviews.map((review) => (
+                <ScrollArea className="h-[400px] pr-4">
+                  {reviews.map((review, index) => (
                     <div
-                      key={review.id}
-                      className="mb-4 last:mb-0 p-4 bg-white bg-opacity-10 backdrop-blur-md rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                      key={index}
+                      className="mb-6 p-4 bg-white bg-opacity-10 rounded-lg shadow-md"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div>
@@ -592,6 +616,19 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
                       <p className="text-sm text-gray-100 mb-2">
                         {review.comment}
                       </p>
+                      {review.projectUrl && (
+                        <p className="text-sm text-gray-200 mb-2">
+                          <strong>Project URL:</strong>{" "}
+                          <a
+                            href={review.projectUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-300 hover:text-blue-200 underline"
+                          >
+                            {review.projectUrl}
+                          </a>
+                        </p>
+                      )}
                       <div className="flex items-center flex-wrap gap-1 mb-2">
                         <span className="text-xs font-semibold text-gray-200">
                           Technologies:
