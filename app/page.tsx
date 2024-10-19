@@ -1,4 +1,7 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { Search, Users, Star, Award, Zap, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +10,17 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Home() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      const techs = searchQuery.split(",").map((tech) => tech.trim());
+      router.push(`/search?techs=${techs.join(",")}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-100">
       <Navbar />
@@ -29,7 +43,7 @@ export default function Home() {
         <Card className="bg-gradient-to-r from-blue-500 to-purple-600 shadow-xl overflow-hidden mb-12">
           <CardContent className="p-6">
             <div className="max-w-3xl mx-auto">
-              <div className="relative">
+              <form onSubmit={handleSearch} className="relative">
                 <Search
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   size={24}
@@ -38,11 +52,16 @@ export default function Home() {
                   type="text"
                   placeholder="Search for skills, hackathons, or teammates..."
                   className="pl-12 pr-4 py-6 w-full bg-white bg-opacity-90 backdrop-blur-sm border-2 border-white border-opacity-50 rounded-lg shadow-lg focus:ring-4 focus:ring-blue-300 focus:border-blue-300 transition-all duration-300 text-lg"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-2 rounded-md hover:from-green-500 hover:to-blue-600 transition-all duration-300">
+                <Button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-2 rounded-md hover:from-green-500 hover:to-blue-600 transition-all duration-300"
+                >
                   Search
                 </Button>
-              </div>
+              </form>
             </div>
           </CardContent>
         </Card>

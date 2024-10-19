@@ -15,12 +15,12 @@ const mainnet = {
 };
 
 // 2. Set chains
-const sepolia = {
-  chainId: 11155111,
-  name: "Ethereum Sepolia",
+const baseSepolia = {
+  chainId: 84532,
+  name: "Base Sepolia",
   currency: "ETH",
-  explorerUrl: "https://sepolia.etherscan.io",
-  rpcUrl: "https://rpc.sepolia.org",
+  explorerUrl: "https://sepolia-explorer.base.org",
+  rpcUrl: "https://sepolia.base.org",
 };
 
 // 3. Create a metadata object
@@ -47,7 +47,7 @@ const ethersConfig = defaultConfig({
 // 5. Create a AppKit instance
 createWeb3Modal({
   ethersConfig,
-  chains: [sepolia],
+  chains: [baseSepolia],
   projectId,
   enableAnalytics: true, // Optional - defaults to your Cloud configuration
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Star, Filter, User, X } from "lucide-react";
+import { Search, Star, Filter, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import {
   Card,
@@ -20,87 +20,117 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Contract, ethers } from "ethers";
+import {
+  useWeb3ModalProvider,
+  useWeb3ModalAccount,
+} from "@web3modal/ethers5/react";
+import { abi } from "@/hardhat/artifacts/contracts/HackReview.sol/HackReview.json";
+import { useSearchParams } from "next/navigation";
 
-// Dummy data for search results
-const searchResults = [
-  {
-    id: 1,
-    hackathon: "ETHGlobal 2023",
-    project: "DeFi Yield Optimizer",
-    rating: 5,
-    review:
-      "Implemented complex smart contracts for our DeFi project. Their Solidity skills are exceptional, especially in optimizing gas usage and implementing advanced yield farming strategies. They also showed great teamwork and communication skills throughout the hackathon.",
-    skills: ["Solidity", "DeFi", "Smart Contracts"],
-    author: {
-      name: "John Doe",
-      avatar: "/api/placeholder/150/150",
-    },
-    reviewee: {
-      name: "Alice Johnson",
-      avatar: "/api/placeholder/150/150",
-    },
-  },
-  {
-    id: 2,
-    hackathon: "Polygon Hackathon",
-    project: "NFT Marketplace",
-    rating: 4,
-    review:
-      "Developed the smart contracts for our NFT marketplace. Their Solidity code was clean and well-structured. They implemented ERC721 and ERC1155 standards efficiently. Could improve on documentation, but overall a strong contributor to the project.",
-    skills: ["Solidity", "NFTs", "ERC Standards"],
-    author: {
-      name: "Emma Wilson",
-      avatar: "/api/placeholder/150/150",
-    },
-    reviewee: {
-      name: "Bob Smith",
-      avatar: "/api/placeholder/150/150",
-    },
-  },
-  {
-    id: 3,
-    hackathon: "ETHDenver",
-    project: "Zero-Knowledge Voting System",
-    rating: 5,
-    review:
-      "Implemented complex zero-knowledge proofs in Solidity for our anonymous voting system. Their deep understanding of both ZK proofs and Solidity allowed us to create a truly innovative solution. Excellent problem-solving skills and ability to explain complex concepts to the team.",
-    skills: ["Solidity", "Zero-Knowledge Proofs", "Cryptography"],
-    author: {
-      name: "Alex Chen",
-      avatar: "/api/placeholder/150/150",
-    },
-    reviewee: {
-      name: "Carol Martinez",
-      avatar: "/api/placeholder/150/150",
-    },
-  },
-];
+interface Review {
+  id: number;
+  hackathon: string;
+  project: string;
+  rating: number;
+  review: string;
+  skills: string[];
+  author: {
+    name: string;
+    avatar: string;
+  };
+  reviewee: {
+    name: string;
+    avatar: string;
+  };
+}
 
-const ReviewFocusedSearchResults = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+interface ContractReview {
+  reviewer: string;
+  reviewee: string;
+  hackathonName: string;
+  reviewText: string;
+  starRating: number;
+  technologies: string[];
+}
+
+const ReviewFocusedSearchResults: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [techFilters, setTechFilters] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState("relevance");
-  const [filteredResults, setFilteredResults] = useState(searchResults);
+  const [sortBy, setSortBy] = useState<string>("relevance");
+  const [filteredResults, setFilteredResults] = useState<Review[]>([]);
+  const { address, isConnected } = useWeb3ModalAccount();
+  const { walletProvider } = useWeb3ModalProvider();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const filtered = searchResults.filter(
-      (result) =>
-        techFilters.length === 0 ||
-        techFilters.every((filter) =>
-          result.skills.some((skill) =>
-            skill.toLowerCase().includes(filter.toLowerCase())
-          )
+    const techs = searchParams.get("techs");
+    if (techs) {
+      setTechFilters(techs.split(","));
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (isConnected && walletProvider && techFilters.length > 0) {
+      fetchReviews();
+    }
+  }, [isConnected, walletProvider, techFilters]);
+
+  const fetchReviews = async () => {
+    if (!walletProvider) return;
+
+    try {
+      const provider = new ethers.providers.Web3Provider(walletProvider, "any");
+      const signer = await provider.getSigner();
+      const contract = new Contract(
+        "0xEcAb28dFa5350b9BBC79256C87BD76928590674E",
+        abi,
+        signer
+      );
+
+      let allReviews: ContractReview[] = [];
+      for (const tech of techFilters) {
+        const reviews: ContractReview[] = await contract.searchReviewsByTech(
+          tech
+        );
+        allReviews = [...allReviews, ...reviews];
+      }
+
+      // Remove duplicates and format the reviews
+      const uniqueReviews = Array.from(
+        new Set(
+          allReviews.map((r) => r.reviewer + r.reviewee + r.hackathonName)
         )
-    );
-    setFilteredResults(filtered);
-  }, [techFilters]);
+      ).map((key) => {
+        return allReviews.find(
+          (r) => r.reviewer + r.reviewee + r.hackathonName === key
+        );
+      });
+
+      const formattedReviews: Review[] = uniqueReviews.map((review, index) => ({
+        id: index + 1,
+        hackathon: review!.hackathonName,
+        project: "N/A", // This information is not available in the contract
+        rating: review!.starRating,
+        review: review!.reviewText,
+        skills: review!.technologies,
+        author: {
+          name: review!.reviewer,
+          avatar: "/api/placeholder/150/150", // Use a placeholder or fetch from elsewhere
+        },
+        reviewee: {
+          name: review!.reviewee,
+          avatar: "/api/placeholder/150/150", // Use a placeholder or fetch from elsewhere
+        },
+      }));
+
+      setFilteredResults(formattedReviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      // Handle error (e.g., show a toast notification)
+    }
+  };
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -150,7 +180,9 @@ const ReviewFocusedSearchResults = () => {
                   type="text"
                   placeholder="Search for skills, technologies..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setSearchQuery(e.target.value)
+                  }
                   onKeyPress={handleSearch}
                   className="pl-10 pr-4 py-2 w-full bg-white bg-opacity-80 backdrop-blur-sm border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                 />
