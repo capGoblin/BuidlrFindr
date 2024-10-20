@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, User } from "lucide-react";
 import ConnectButton from "@/components/ConnectButton";
+import { useWeb3ModalAccount } from "@web3modal/ethers5/react";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { address } = useWeb3ModalAccount();
 
   return (
     <nav className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg backdrop-filter backdrop-blur-lg bg-opacity-30 sticky top-0 z-50">
@@ -20,7 +22,7 @@ export default function Navbar() {
             </Link>
           </div>
           <div className="hidden md:flex items-center space-x-6">
-            <NavLink href="/profile">
+            <NavLink href={`/profile/${address}`}>
               <User className="w-5 h-5 mr-1" />
               Your Profile
             </NavLink>

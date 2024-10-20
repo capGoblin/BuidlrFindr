@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Star, Filter, X, Link } from "lucide-react"; // Added Link icon
+import { Search, Star, Filter, X, Link as LinkIcon } from "lucide-react"; // Added Link icon
 import Navbar from "@/components/Navbar";
 import {
   Card,
@@ -28,6 +28,7 @@ import {
 } from "@web3modal/ethers5/react";
 import { abi } from "@/hardhat/artifacts/contracts/HackReview.sol/HackReview.json";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 interface Review {
   id: number;
@@ -252,7 +253,7 @@ const ReviewFocusedSearchResults: React.FC = () => {
                     <p className="text-gray-700 mb-4">{result.review}</p>
                     {result.projectUrl && (
                       <p className="text-sm text-gray-600 mb-4 flex items-center">
-                        <Link className="mr-2 h-4 w-4" />
+                        <LinkIcon className="mr-2 h-4 w-4" />
                         <a
                           href={result.projectUrl}
                           target="_blank"
@@ -288,9 +289,11 @@ const ReviewFocusedSearchResults: React.FC = () => {
                         <p className="text-sm font-medium text-gray-900">
                           Developer
                         </p>
-                        <p className="text-xs text-gray-500">
-                          {result.reviewee.name}
-                        </p>
+                        <Link href={`/profile/${result.reviewee.name}`}>
+                          <p className="text-xs text-gray-500">
+                            {result.reviewee.name}
+                          </p>
+                        </Link>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -298,9 +301,11 @@ const ReviewFocusedSearchResults: React.FC = () => {
                         <p className="text-sm font-medium text-gray-900 text-right">
                           Reviewer
                         </p>
-                        <p className="text-xs text-gray-500 text-right">
-                          {result.author.name}
-                        </p>
+                        <Link href={`/profile/${result.author.name}`}>
+                          <p className="text-xs text-gray-500 text-right">
+                            {result.author.name}
+                          </p>
+                        </Link>
                       </div>
                       <div className="flex-shrink-0">
                         <img
