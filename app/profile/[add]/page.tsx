@@ -1,30 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Navbar from "@/components/Navbar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import {
-  Star,
-  MapPin,
-  Link,
-  CheckCircle2,
-  Calendar,
-  Search,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import Navbar from "@/components/Navbar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { abi } from "@/hardhat/artifacts/contracts/HackReview.sol/HackReview.json";
-import { Contract, ethers } from "ethers";
-import {
-  useWeb3ModalAccount,
-  useWeb3ModalProvider,
-  useWeb3Modal,
-} from "@web3modal/ethers5/react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -32,44 +12,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { abi } from "@/hardhat/artifacts/contracts/HackReview.sol/HackReview.json";
+import { cn } from "@/lib/utils";
+import {
+  useWeb3Modal,
+  useWeb3ModalAccount,
+  useWeb3ModalProvider,
+} from "@web3modal/ethers5/react";
+import { Contract, ethers } from "ethers";
+import { Calendar, CheckCircle2, MapPin, Search, Star } from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-
-// Dummy data
-const profileData = {
-  passport: {
-    activity_score: 75,
-    identity_score: 90,
-    skills_score: 85,
-    calculating_score: false,
-    human_checkmark: true,
-    last_calculated_at: "2024-10-13T07:18:15.602Z",
-    main_wallet: "0x1234...5678",
-    score: 83,
-    passport_profile: {
-      bio: "Passionate blockchain developer and hackathon enthusiast",
-      display_name: "CryptoDevAlice",
-      location: "San Francisco, CA",
-      tags: ["Blockchain", "Solidity", "React", "Web3"],
-    },
-    verified_wallets: ["0x1234...5678", "0x9876...5432"],
-    merged: true,
-    passport_socials: [
-      {
-        follower_count: "5.2K",
-        following_count: "1.3K",
-        location: "San Francisco, CA",
-        profile_bio: "Building the decentralized future",
-        profile_display_name: "Alice | Web3 Dev",
-        profile_image_url: "/api/placeholder/150/150",
-        profile_name: "alice_web3",
-        profile_url: "https://lens.xyz/alice_web3",
-        source: "lens",
-      },
-    ],
-  },
-};
 
 // Define an interface for the review structure
 interface NewReview {
@@ -127,6 +85,15 @@ interface Review {
   projectUrl: string; // Add this line
 }
 
+interface ContractReview {
+  reviewer: string;
+  hackathonName: string;
+  starRating: number;
+  reviewText: string;
+  technologies: string[];
+  projectUrl: string;
+}
+
 const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
   // Dummy reviews data
   const dummyReviews = [
@@ -169,7 +136,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [techFilters, setTechFilters] = useState<string[]>([]);
-  const { address, isConnected } = useWeb3ModalAccount();
+  const { isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
   const { open } = useWeb3Modal();
   const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
@@ -181,6 +148,52 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
     projectUrl: "",
   });
   const [reviews, setReviews] = useState<Review[]>([...dummyReviews]);
+
+  const getReviews = useCallback(async () => {
+    if (!isConnected || !walletProvider) {
+      console.log("Wallet not connected");
+      toast("Please connect your wallet to view reviews", {
+        action: {
+          label: "Connect Wallet",
+          onClick: () => open(),
+        },
+      });
+      return;
+    }
+
+    try {
+      const provider = new ethers.providers.Web3Provider(walletProvider, "any");
+      const signer = await provider.getSigner();
+      const contract = new Contract(
+        "0xEcAb28dFa5350b9BBC79256C87BD76928590674E",
+        abi,
+        signer
+      );
+
+      const res: ContractReview[] = await contract.getUserReviews(params.add);
+      console.log("Reviews fetched", res);
+
+      const fetchedReviews = res.map(
+        (review: ContractReview, index: number) => ({
+          id: reviews.length + index + 1,
+          reviewer: review.reviewer,
+          hackathon: review.hackathonName,
+          rating: review.starRating,
+          comment: review.reviewText,
+          technologies: review.technologies,
+          date: new Date().toISOString(),
+          projectUrl: review.projectUrl,
+        })
+      );
+
+      setReviews((prevReviews) => [...prevReviews, ...fetchedReviews]);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      toast("Error fetching reviews", {
+        description: "Please try again later.",
+      });
+    }
+  }, [isConnected, walletProvider, open, params.add, reviews.length]);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -214,7 +227,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
     if (isConnected) {
       getReviews();
     }
-  }, [params.add, isConnected]);
+  }, [params.add, isConnected, getReviews]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -225,63 +238,6 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ params }) => {
   }
 
   const { passport_profile, passport_socials } = profileData;
-
-  const filteredReviews = reviews.filter(
-    (review) =>
-      techFilters.length === 0 ||
-      techFilters.every((filter) =>
-        review.technologies.some((tech) =>
-          tech.toLowerCase().includes(filter.toLowerCase())
-        )
-      )
-  );
-
-  async function getReviews() {
-    if (!isConnected || !walletProvider) {
-      console.log("Wallet not connected");
-      toast("Please connect your wallet to view reviews", {
-        action: {
-          label: "Connect Wallet",
-          onClick: () => open(),
-        },
-      });
-      return;
-    }
-
-    try {
-      const provider = new ethers.providers.Web3Provider(walletProvider, "any");
-      const signer = await provider.getSigner();
-
-      const contract = new Contract(
-        "0xbe2e297a2F5Ef3273773e1d9b47C53DFe44F1b34",
-        abi,
-        signer
-      );
-
-      const res = await contract.getUserReviews(params.add);
-      console.log("Reviews fetched", res);
-
-      // Convert the fetched reviews to the format used in your component
-      const fetchedReviews = res.map((review: any, index: number) => ({
-        id: reviews.length + index + 1,
-        reviewer: review.reviewer,
-        hackathon: review.hackathonName,
-        rating: review.starRating,
-        comment: review.reviewText,
-        technologies: review.technologies,
-        date: new Date().toISOString(),
-        projectUrl: review.projectUrl, // Add this line
-      }));
-
-      // Update the reviews state, appending the new reviews to the existing ones
-      setReviews((prevReviews) => [...fetchedReviews, ...prevReviews]);
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
-      toast("Error fetching reviews", {
-        description: "Please try again later.",
-      });
-    }
-  }
 
   async function writeReview(
     hackName: string,

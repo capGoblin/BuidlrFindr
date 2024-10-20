@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Search, Star, Filter, X, Link as LinkIcon } from "lucide-react"; // Added Link icon
 import Navbar from "@/components/Navbar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -20,15 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Contract, ethers } from "ethers";
-import {
-  useWeb3ModalProvider,
-  useWeb3ModalAccount,
-} from "@web3modal/ethers5/react";
 import { abi } from "@/hardhat/artifacts/contracts/HackReview.sol/HackReview.json";
-import { useSearchParams } from "next/navigation";
+import {
+  useWeb3ModalAccount,
+  useWeb3ModalProvider,
+} from "@web3modal/ethers5/react";
+import { Contract, ethers } from "ethers";
+import { Filter, Link as LinkIcon, Search, Star, X } from "lucide-react"; // Added Link icon
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 interface Review {
   id: number;
@@ -62,7 +62,7 @@ const ReviewFocusedSearchResults: React.FC = () => {
   const [techFilters, setTechFilters] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("relevance");
   const [filteredResults, setFilteredResults] = useState<Review[]>([]);
-  const { address, isConnected } = useWeb3ModalAccount();
+  const { isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
   const searchParams = useSearchParams();
 
@@ -77,7 +77,7 @@ const ReviewFocusedSearchResults: React.FC = () => {
     if (isConnected && walletProvider && techFilters.length > 0) {
       fetchReviews();
     }
-  }, [isConnected, walletProvider, techFilters]);
+  }, [isConnected]);
 
   const fetchReviews = async () => {
     if (!walletProvider) return;

@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { Search, Users, Star, Award, Zap, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search, Star, Users, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
