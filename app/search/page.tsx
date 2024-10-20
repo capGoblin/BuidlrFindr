@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { abi } from "@/hardhat/artifacts/contracts/HackReview.sol/HackReview.json";
+import { abi } from "@/artifacts/contracts/HackReview.sol/HackReview.json";
 import {
   useWeb3ModalAccount,
   useWeb3ModalProvider,
